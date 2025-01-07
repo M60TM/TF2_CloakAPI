@@ -209,15 +209,22 @@ public void OnPluginStart()
 
 	// CTFPlayerShared::UpdateCloakMeter()
 	DynamicDetour dtUpdateCloakMeterPre = DynamicDetour.FromConf(hGameData, "CTFPlayerShared::UpdateCloakMeter()");
-
 	if(!dtUpdateCloakMeterPre)
-		SetFailState("Failed to setup detour for CTFPlayerShared::UpdateCloakMeter()");
+	{
+		dtUpdateCloakMeterPre = DynamicDetour.FromConf(hGameData, "CTFPlayerShared::UpdateCloakMeter().part.0");
+		if(!dtUpdateCloakMeterPre)
+			SetFailState("Failed to setup detour for CTFPlayerShared::UpdateCloakMeter()");
+		dtUpdateCloakMeterPre.Enable(Hook_Pre, OnUpdateCloakMeterInlinePre);
+	}
+	else
+	{
+		dtUpdateCloakMeterPre.Enable(Hook_Pre, OnUpdateCloakMeterPre);
+	}
 
 	g_offset_CTFPlayerShared_pOuter = view_as<Address>(hGameData.GetOffset("CTFPlayerShared::m_pOuter"));
 
 	dtActivateInvisibilityWatchPre.Enable(Hook_Pre, OnActivateInvisibilityWatchPre);
 	dtCleanupInvisibilityWatchPre.Enable(Hook_Pre,  OnCleanupInvisibilityWatchPre);
-	dtUpdateCloakMeterPre.Enable(Hook_Pre,          OnUpdateCloakMeterPre);
 
 	delete hGameData;
 
@@ -347,6 +354,39 @@ public MRESReturn OnActivateInvisibilityWatchPre(int iCloak, DHookReturn hReturn
 // CTFPlayerShared::UpdateCloakMeter()
 public MRESReturn OnUpdateCloakMeterPre(Address pShared) 
 {
+	int iClient = GetClientFromPlayerShared(pShared);
+
+	if(iClient <= 0)
+		return MRES_Ignored;
+
+	if(!g_PrivateForwardStorageList[iClient].m_hForward[OnUpdateCloakMeter])
+		return MRES_Ignored;
+
+	float flCloakMeter = GetEntPropFloat(iClient, Prop_Send, "m_flCloakMeter");
+
+	// The compiler keeps throwing a warning if you do view_as<int>(...) it inside Call_StartForward.
+	int iHookType = view_as<int>(OnUpdateCloakMeter);
+
+	Action action;
+
+	Call_StartForward(g_PrivateForwardStorageList[iClient].m_hForward[iHookType]);
+	Call_PushCell(iClient);
+	Call_PushFloat(flCloakMeter);
+	Call_Finish(action);
+
+	switch(action)
+	{
+		case Plugin_Handled, Plugin_Stop:
+		{
+			return MRES_Supercede;
+		}
+	}
+
+	return MRES_Ignored;
+}
+
+public MRESReturn OnUpdateCloakMeterInlinePre(DHookParam param) {
+	Address pShared = param.GetAddress(1);
 	int iClient = GetClientFromPlayerShared(pShared);
 
 	if(iClient <= 0)
