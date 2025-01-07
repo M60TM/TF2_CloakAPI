@@ -27,6 +27,21 @@
 				"return"		"void"
 				"this"			"address"
 			}
+			
+			"CTFPlayerShared::UpdateCloakMeter().part.0"
+			{
+				"signature"		"CTFPlayerShared::UpdateCloakMeter().part.0"
+				"callconv"		"cdecl"
+				"return"		"void"
+				"arguments"
+				{
+					"this"
+					{
+						"type"	"objectptr"
+						"register"	"eax"
+					}
+				}
+			}
 		}
 		
 		"Signatures"
@@ -57,8 +72,13 @@
 			{
 				// find raw contents of g_aDebuffConditions and jump to xref function with most references
 				"library"		"server"
-				"linux"			"@_ZN15CTFPlayerShared16UpdateCloakMeterEv"
 				"windows"		"\x55\x8B\xEC\x83\xEC\x18\x56\x8B\xF1\x6A\x08"
+			}
+			
+			"CTFPlayerShared::UpdateCloakMeter().part.0"
+			{
+				"library"	"server"
+				"linux"		"@_ZN15CTFPlayerShared16UpdateCloakMeterEv.part.0"
 			}
 		}
 		
