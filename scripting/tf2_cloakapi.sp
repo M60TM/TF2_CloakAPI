@@ -385,8 +385,8 @@ public MRESReturn OnUpdateCloakMeterPre(Address pShared)
 	return MRES_Ignored;
 }
 
-public MRESReturn OnUpdateCloakMeterInlinePre(DHookParam param) {
-	Address pShared = param.GetAddress(1);
+public MRESReturn OnUpdateCloakMeterInlinePre(DHookParam hParam) {
+	Address pShared = hParam.GetAddress(1);
 	int iClient = GetClientFromPlayerShared(pShared);
 
 	if(iClient <= 0)
